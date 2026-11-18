@@ -1,6 +1,5 @@
 name: 文学审稿反馈
 description: 对人物、节奏、语言、设定或标题提出具体反馈
-labels: ["documentation"]
 body:
   - type: dropdown
     id: scope
