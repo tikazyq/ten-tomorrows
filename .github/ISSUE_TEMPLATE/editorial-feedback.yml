@@ -1,0 +1,30 @@
+name: 文学审稿反馈
+description: 对人物、节奏、语言、设定或标题提出具体反馈
+labels: ["documentation"]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: 反馈类型
+      options:
+        - 人物与对话
+        - 情节与节奏
+        - 世界观与因果
+        - 标题与主题
+        - 排版与阅读体验
+    validations:
+      required: true
+  - type: textarea
+    id: chapter
+    attributes:
+      label: 章节及段落
+      description: 请尽量提供位置，并避免在 Issue 标题中剧透。
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: 问题和建议
+      description: 请写出具体问题及期望的改进方向。
+    validations:
+      required: true
