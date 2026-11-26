@@ -16,6 +16,8 @@
 
 可在 [Issues 页面](https://github.com/tikazyq/ten-tomorrows/issues) 查看进度。结构方案、初稿与审稿修订应通过 Pull Requests 提交并关联章节 Issue。
 
+v0.8 世界观修订单独跟踪于 [Issue #13](https://github.com/tikazyq/ten-tomorrows/issues/13)，落地文本待 PR 人工审核；[连续性检查](../editorial/v0.8-连续性检查.md)记录与现有 PR #12 结构案的衔接。本轮不把章节进度或审核状态重新初始化。
+
 本目录中的 `issues/` 文档保存初始化时的**任务草案快照**；实际状态以线上 Issue、PR 与人工批准记录为准。避免在这两套记录里分别维护进度。
 
 `issues.json` 是初始化与链接索引；`labels.md` 只是建议标签清单，未创建的标签不得视为已启用。
