@@ -1,0 +1,17 @@
+{
+  "02": {
+    "branch": "editorial/phase2-02",
+    "path": "outputs/phase2/02-完美的一天/完美的一天.md",
+    "prNumber": 15
+  },
+  "03": {
+    "branch": "editorial/phase2-03",
+    "path": "outputs/phase2/03-接你放学/接你放学.md",
+    "prNumber": 16
+  },
+  "08": {
+    "branch": "editorial/phase2-08",
+    "path": "outputs/phase2/08-最后一个生日/最后一个生日.md",
+    "prNumber": 17
+  }
+}

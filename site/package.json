@@ -1,0 +1,23 @@
+{
+  "name": "ten-tomorrows-reading",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "^20.19.0 || ^22.12.0 || ^24.0.0" },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "build:preview": "INCLUDE_DRAFTS=true astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "astro": "^5.18.0",
+    "marked": "^16.4.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@types/node": "^20.19.0",
+    "typescript": "^5.9.3"
+  }
+}
