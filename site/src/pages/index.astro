@@ -1,0 +1,66 @@
+---
+import ReaderControls from '../components/ReaderControls.astro';
+import { acts } from '../data/catalog';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getChapters } from '../lib/chapters';
+
+const { chapters, showDrafts } = await getChapters();
+const readable = new Map(chapters.map((chapter) => [chapter.number, chapter]));
+const epigraph = '十种超级智能未来，十段彼此平行的人类命运。';
+---
+<BaseLayout title="十个明天 · Ten Tomorrows" description={epigraph}>
+  <div class="page">
+    <div class="reader-bar cover-bar">
+      <ReaderControls />
+    </div>
+
+    <main>
+      {showDrafts && <p class="draft-notice">作者审阅预览 · 含未审草稿（正式站仅显示已审章节）</p>}
+      <header class="cover">
+        <h1>十个明天</h1>
+        <p class="cover-subtitle" lang="en">Ten Tomorrows</p>
+        <p class="epigraph">{epigraph}</p>
+        <p class="cover-intro">这些故事从普通人的日常写起，跟随他们走进各自的明天。每一篇都发生在一条独立的时间线上。</p>
+      </header>
+
+      <nav class="contents" aria-labelledby="contents-title">
+        <h2 id="contents-title">目录</h2>
+        {acts.map(({ label, chapters }) => (
+          <section class="act">
+            <h3>{label}</h3>
+            <ol role="list">
+              {chapters.map((entry) => {
+                const chapter = readable.get(entry.number);
+                return (
+                  <li>
+                    {chapter ? (
+                      <a class="toc-row" href={`/${chapter.slug}`}>
+                        <span class="toc-number">{entry.number}</span>
+                        <span>{entry.title}</span>
+                        {chapter.draftPr
+                          ? <span class="toc-status draft-status">草稿 · 待审</span>
+                          : <span class="toc-status">约 {chapter.readingMinutes} 分钟</span>}
+                      </a>
+                    ) : (
+                      <div class="toc-row upcoming">
+                        <span class="toc-number">{entry.number}</span>
+                        <span>{entry.title}</span>
+                        <span class="toc-status">创作中</span>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        ))}
+      </nav>
+    </main>
+
+    <footer class="site-footer">
+      <p>《十个明天》版权所有。转载、翻译或改编请事先获得授权。</p>
+      <p>灵感来自 Jason Hausenloy 与 Miles Kodama 的 <cite lang="en">How Could Superintelligence Go for the Average Person?</cite></p>
+      <p><a href="https://github.com/tikazyq/ten-tomorrows">GitHub 仓库</a>的 <code>canon/</code> 和 <code>editorial/</code> 含剧透。</p>
+    </footer>
+  </div>
+</BaseLayout>

@@ -1,0 +1,60 @@
+---
+interface Props {
+  showSize?: boolean;
+}
+
+const { showSize = false } = Astro.props;
+const themes = [
+  { value: 'light', label: '纸白', symbol: '日' },
+  { value: 'sepia', label: '米纸', symbol: '纸' },
+  { value: 'dark', label: '夜读', symbol: '夜' },
+];
+const sizes = [
+  { value: 'sm', label: '小字号', symbol: 'A−' },
+  { value: 'md', label: '中字号', symbol: 'A' },
+  { value: 'lg', label: '大字号', symbol: 'A+' },
+];
+---
+<div class="reader-controls" hidden>
+  <div class="control-group" role="group" aria-label="阅读主题">
+    {themes.map(({ value, label, symbol }) => (
+      <button type="button" data-setting="theme" data-value={value} aria-label={label} aria-pressed="false" title={label}>{symbol}</button>
+    ))}
+  </div>
+  {showSize && (
+    <div class="control-group" role="group" aria-label="正文字号">
+      {sizes.map(({ value, label, symbol }) => (
+        <button type="button" data-setting="size" data-value={value} aria-label={label} aria-pressed="false" title={label}>{symbol}</button>
+      ))}
+    </div>
+  )}
+</div>
+<script is:inline>
+  for (const controls of document.querySelectorAll('.reader-controls')) {
+    const buttons = controls.querySelectorAll('button[data-setting]');
+    const settings = document.documentElement.dataset;
+
+    const update = () => {
+      for (const button of buttons) {
+        const { setting, value } = button.dataset;
+        button.setAttribute('aria-pressed', String(settings[setting] === value));
+      }
+    };
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        const { setting, value } = button.dataset;
+        settings[setting] = value;
+        try {
+          localStorage.setItem('tt-' + setting, value);
+        } catch {
+          // Keep the setting for the current page.
+        }
+        update();
+      });
+    }
+
+    update();
+    controls.hidden = false;
+  }
+</script>

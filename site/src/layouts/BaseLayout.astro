@@ -1,0 +1,39 @@
+---
+import '../styles/reading.css';
+
+interface Props {
+  title: string;
+  description: string;
+  type?: 'website' | 'article';
+}
+
+const { title, description, type = 'website' } = Astro.props;
+---
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-size="md">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem('tt-theme');
+        const size = localStorage.getItem('tt-size');
+        if (['light', 'sepia', 'dark'].includes(theme)) document.documentElement.dataset.theme = theme;
+        if (['sm', 'md', 'lg'].includes(size)) document.documentElement.dataset.size = size;
+      } catch {
+        // The defaults work when browser storage is unavailable.
+      }
+    </script>
+    {process.env.ALLOW_INDEXING !== 'true' && <meta name="robots" content="noindex, nofollow, noarchive" />}
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:type" content={type} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content="十个明天" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

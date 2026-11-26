@@ -1,0 +1,48 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import ReaderControls from '../components/ReaderControls.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getChapters } from '../lib/chapters';
+
+export const getStaticPaths = (async () => {
+  const { chapters } = await getChapters();
+
+  return chapters.map((chapter, index) => ({
+    params: { slug: chapter.slug },
+    props: { chapter, previous: chapters[index - 1], next: chapters[index + 1] },
+  }));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { chapter, previous, next } = Astro.props;
+---
+<BaseLayout title={`${chapter.title} · 十个明天`} description={`《十个明天》第 ${Number(chapter.number)} 章《${chapter.title}》。`} type="article">
+  <div class="page">
+    <nav class="reader-bar" aria-label="阅读工具">
+      <a href="/">← 目录</a>
+      <ReaderControls showSize />
+    </nav>
+
+    <main>
+      {chapter.draftPr && (
+        <p class="draft-notice">草稿 · 审阅版 · PR #{chapter.draftPr}（尚未合入正式目录）</p>
+      )}
+      <header class="chapter-heading">
+        <p class="chapter-number">第 {Number(chapter.number)} 章</p>
+        <h1>{chapter.title}</h1>
+        <p class="chapter-details">
+          {chapter.subtitle && <><span>{chapter.subtitle}</span><span aria-hidden="true"> · </span></>}
+          <span>约 {chapter.readingMinutes} 分钟阅读</span>
+        </p>
+      </header>
+
+      <article class="chapter-body" set:html={chapter.html} />
+
+      <nav class="chapter-nav" aria-label="章节导航">
+        <span>{previous && <a href={`/${previous.slug}`} rel="prev">← {previous.title}</a>}</span>
+        <a href="/">返回目录</a>
+        <span>{next && <a href={`/${next.slug}`} rel="next">{next.title} →</a>}</span>
+      </nav>
+    </main>
+  </div>
+</BaseLayout>
