@@ -1,0 +1,86 @@
+name: Site CI
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'chapters/**'
+      - '.github/workflows/site-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+      - 'chapters/**'
+      - '.github/workflows/site-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Install dependencies
+        working-directory: site
+        run: npm ci
+      - name: Astro typecheck
+        working-directory: site
+        run: npm run check
+      - name: Production build & isolation check
+        working-directory: site
+        env:
+          VERCEL_ENV: production
+        run: |
+          npm run build
+          python3 - <<'PY'
+          from pathlib import Path
+
+          dist = Path('dist')
+          for path in ('index.html', '01/index.html', 'robots.txt'):
+              assert (dist / path).is_file(), f'missing dist/{path}'
+          for path in ('02', '03', '08'):
+              assert not (dist / path).exists(), f'draft leaked into dist/{path}'
+
+          index = (dist / 'index.html').read_text()
+          chapter = (dist / '01/index.html').read_text()
+          for text in ('人类动物园', '人类灭绝', '恶意 AI'):
+              assert text not in index, f'{text!r} leaked into dist/index.html'
+          assert '待 PR 审核' not in chapter, 'review marker leaked into chapter 01'
+          for text in ('meta-table', 'analysis-report', 'knowledge-report', 'system-title', 'archive-label', 'noindex'):
+              assert text in chapter, f'missing {text!r} in dist/01/index.html'
+          PY
+      - name: Author preview build check
+        working-directory: site
+        env:
+          INCLUDE_DRAFTS: 'true'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm run build
+          python3 - <<'PY'
+          from pathlib import Path
+
+          dist = Path('dist')
+          for path in ('01/index.html', '02/index.html', '03/index.html', '08/index.html'):
+              assert (dist / path).is_file(), f'missing dist/{path}'
+
+          index = (dist / 'index.html').read_text()
+          assert '作者审阅预览' in index, 'missing author preview label in dist/index.html'
+          for chapter in ('02', '03', '08'):
+              html = (dist / chapter / 'index.html').read_text()
+              assert '草稿 · 审阅版' in html, f'missing draft label in dist/{chapter}/index.html'
+          chapter_01 = (dist / '01/index.html').read_text()
+          assert '草稿 · 审阅版' not in chapter_01, 'draft label leaked into chapter 01'
+          PY
