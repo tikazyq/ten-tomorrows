@@ -187,7 +187,7 @@ a:hover { color: var(--accent); }
 .contents h2 { margin: 0 0 20px; font-size: 1.375rem; letter-spacing: .1em; }
 .act + .act { margin-top: 24px; }
 .act h3 { margin: 0; padding: 0 0 8px; color: var(--accent); font: 600 .95rem/1.45 var(--sans); }
-.act ol { margin: 0; padding: 0; list-style: none; }
+.act :is(ol, ul) { margin: 0; padding: 0; list-style: none; }
 .act li { border-top: 1px solid var(--rule); }
 .act li:last-child { border-bottom: 1px solid var(--rule); }
 
@@ -207,6 +207,35 @@ a.toc-row:hover { background: var(--selected); }
 .toc-number { font-variant-numeric: tabular-nums; }
 .upcoming { color: var(--muted); }
 .draft-status { padding: 3px 7px; border-radius: 4px; background: var(--draft); color: var(--draft-ink); }
+.brief-status {
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--report);
+  color: var(--muted);
+}
+
+.chapter-brief-status {
+  display: inline-block;
+  margin: 13px 0 0;
+  font: .95rem/1.5 var(--sans);
+}
+
+.workspace { margin-top: 56px; scroll-margin-top: 20px; }
+.workspace .toc-row { grid-template-columns: minmax(0, 1fr) auto; }
+
+.related-docs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 14px;
+  margin: 0 0 26px;
+  padding: 3px 12px;
+  border-block: 1px solid var(--rule);
+  color: var(--muted);
+  font: .95rem/1.5 var(--sans);
+}
+
+.related-docs a { display: inline-flex; align-items: center; min-height: 44px; }
 
 .site-footer {
   max-width: 590px;
@@ -221,7 +250,7 @@ a.toc-row:hover { background: var(--selected); }
 .chapter-body { font-size: var(--reading-size); line-height: 2.04; overflow-wrap: anywhere; }
 .chapter-body > p { margin: 1.1em 0; letter-spacing: .012em; text-align: justify; }
 .chapter-body > p.ending-pause { margin-top: 3.25em; }
-.chapter-body img { max-width: 100%; height: auto; }
+:is(.chapter-body, .doc-body) img { max-width: 100%; height: auto; }
 
 .chapter-body hr {
   width: 52%;
@@ -267,7 +296,7 @@ a.toc-row:hover { background: var(--selected); }
 .meta-table th { background: var(--table-head); font-weight: 650; }
 .meta-table td:first-child { width: 34%; }
 
-.chapter-body pre {
+:is(.chapter-body, .doc-body) pre {
   margin: 0 0 27px;
   padding: 16px 18px;
   color: var(--log-ink);
@@ -279,9 +308,9 @@ a.toc-row:hover { background: var(--selected); }
   font: .875em/1.8 ui-monospace, "SFMono-Regular", Consolas, "Noto Sans Mono CJK SC", monospace;
 }
 
-.chapter-body pre code { font: inherit; }
+:is(.chapter-body, .doc-body) pre code { font: inherit; }
 
-.chapter-body blockquote {
+:is(.chapter-body, .doc-body) blockquote {
   margin: 30px 0 34px;
   padding: 20px 24px;
   border: 1px solid var(--rule);
@@ -298,8 +327,8 @@ a.toc-row:hover { background: var(--selected); }
   color: var(--archive-ink);
 }
 
-.chapter-body blockquote p { margin: 0 0 1em; }
-.chapter-body blockquote p:last-child { margin-bottom: 0; }
+:is(.chapter-body, .doc-body) blockquote p { margin: 0 0 1em; }
+:is(.chapter-body, .doc-body) blockquote p:last-child { margin-bottom: 0; }
 .chapter-body .report-label { border-bottom: 1px solid var(--rule); padding-bottom: 12px; margin-bottom: 16px; }
 .report-dot { display: inline-block; width: 7px; height: 7px; margin-right: 9px; background: currentColor; border-radius: 50%; vertical-align: middle; }
 
@@ -317,6 +346,54 @@ a.toc-row:hover { background: var(--selected); }
 
 .chapter-nav > :last-child { text-align: right; }
 
+.doc-heading h1 { font-size: clamp(1.75rem, 5vw, 2.55rem); letter-spacing: .04em; overflow-wrap: anywhere; }
+.doc-body { font-size: var(--reading-size); line-height: 1.88; overflow-wrap: anywhere; }
+.doc-body :is(h2, h3, h4) { margin: 1.75em 0 .65em; line-height: 1.45; }
+.doc-body h2 { font-size: 1.35em; scroll-margin-top: 20px; }
+.doc-body h3 { font-size: 1.17em; }
+.doc-body h4 { font-size: 1em; }
+.doc-body :is(ul, ol) { padding-inline-start: 1.55em; }
+.doc-body li + li { margin-top: .35em; }
+.doc-body hr { margin: 2em 0; border: 0; border-top: 1px solid var(--rule); }
+.doc-body :not(pre) > code {
+  padding: .08em .25em;
+  border-radius: 3px;
+  background: var(--log);
+  color: var(--log-ink);
+}
+
+.doc-body .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--table);
+  font: .95rem/1.65 var(--sans);
+}
+
+.doc-body :is(th, td) {
+  min-width: 7rem;
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  text-align: start;
+  vertical-align: top;
+}
+
+.doc-body th { background: var(--table-head); }
+.doc-toc {
+  margin-bottom: 2rem;
+  padding: 0 14px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--report);
+  color: var(--report-ink);
+  font: .95rem/1.55 var(--sans);
+}
+
+.doc-toc summary { padding: 11px 0; cursor: pointer; }
+.doc-toc summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.doc-toc ol { margin: 0 0 12px; padding-inline-start: 0; list-style: none; }
+.doc-toc a { display: block; padding: 7px 0; overflow-wrap: anywhere; }
+
 @media (max-width: 540px) {
   :root { --reading-size: 1.04rem; }
   :root[data-size="sm"] { --reading-size: 1rem; }
@@ -326,7 +403,7 @@ a.toc-row:hover { background: var(--selected); }
   .chapter-heading { margin-top: 32px; margin-bottom: 35px; }
   .chapter-body { line-height: 1.93; }
   .chapter-body hr { margin: 42px auto 35px; }
-  .chapter-body pre, .chapter-body blockquote { padding: 12px 13px; }
+  :is(.chapter-body, .doc-body) :is(pre, blockquote) { padding: 12px 13px; }
   .meta-table th, .meta-table td { padding: 6px 8px; }
 }
 
@@ -336,8 +413,8 @@ a.toc-row:hover { background: var(--selected); }
   .page { width: 100%; max-width: 165mm; padding: 0; }
   .reader-bar, .chapter-nav { display: none; }
   .cover, .chapter-heading { margin-top: 0; }
-  .chapter-body { font-size: 11pt; }
-  .chapter-body pre, .chapter-body blockquote, .meta-table, .meta-table th, .draft-notice {
+  :is(.chapter-body, .doc-body) { font-size: 11pt; }
+  :is(.chapter-body, .doc-body) :is(pre, blockquote), .meta-table, .meta-table th, .draft-notice {
     background: #fff;
     color: #000;
     border-color: #aaa;

@@ -5,6 +5,12 @@ on:
     paths:
       - 'site/**'
       - 'chapters/**'
+      - 'briefs/**'
+      - 'canon/**'
+      - 'editorial/**'
+      - 'outputs/phase1/**'
+      - 'outputs/phase2/**'
+      - 'research/**'
       - '.github/workflows/site-ci.yml'
   push:
     branches:
@@ -12,6 +18,12 @@ on:
     paths:
       - 'site/**'
       - 'chapters/**'
+      - 'briefs/**'
+      - 'canon/**'
+      - 'editorial/**'
+      - 'outputs/phase1/**'
+      - 'outputs/phase2/**'
+      - 'research/**'
       - '.github/workflows/site-ci.yml'
   workflow_dispatch:
 
@@ -49,23 +61,25 @@ jobs:
           from pathlib import Path
 
           dist = Path('dist')
-          for path in ('index.html', '01/index.html', 'robots.txt'):
-              assert (dist / path).is_file(), f'missing dist/{path}'
-          for path in ('02', '03', '08'):
-              assert not (dist / path).exists(), f'draft leaked into dist/{path}'
+          html_routes = {path.relative_to(dist).as_posix() for path in dist.rglob('*.html')}
+          assert html_routes == {'index.html', '01/index.html'}, f'unexpected public HTML: {html_routes}'
+          assert (dist / 'robots.txt').is_file(), 'missing dist/robots.txt'
+          for path in ('02', '03', '04', '05', '06', '07', '08', '09', '10', '11', 'work'):
+              assert not (dist / path).exists(), f'private content leaked into dist/{path}'
 
           index = (dist / 'index.html').read_text()
           chapter = (dist / '01/index.html').read_text()
-          for text in ('人类动物园', '人类灭绝', '恶意 AI'):
+          for text in ('人类动物园', '人类灭绝', '恶意 AI', '作者私密书架', '任务书 · 未成稿', 'id="workspace"'):
               assert text not in index, f'{text!r} leaked into dist/index.html'
           assert '待 PR 审核' not in chapter, 'review marker leaked into chapter 01'
           for text in ('meta-table', 'analysis-report', 'knowledge-report', 'system-title', 'archive-label', 'noindex'):
               assert text in chapter, f'missing {text!r} in dist/01/index.html'
           PY
-      - name: Author preview build check
+      - name: Author Production build check
         working-directory: site
         env:
-          INCLUDE_DRAFTS: 'true'
+          VERCEL_ENV: production
+          AUTHOR_SITE_MODE: 'true'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm run build
@@ -73,14 +87,35 @@ jobs:
           from pathlib import Path
 
           dist = Path('dist')
-          for path in ('01/index.html', '02/index.html', '03/index.html', '08/index.html'):
-              assert (dist / path).is_file(), f'missing dist/{path}'
+          chapters = [f'{number:02}' for number in range(1, 12)]
+          workspace = (
+              'story-bible', 'tech-boundaries', 'phase1-02', 'phase1-03', 'phase1-08',
+              'phase1-cross-review', 'phase1-titles', 'phase1-decisions',
+              'phase2-02-review', 'phase2-03-review', 'phase2-08-review',
+              'brief-02', 'brief-03', 'brief-08',
+              'toc-status', 'v08-continuity', 'plan', 'writing-guide', 'review-process',
+          )
+          for route in (*chapters, *(f'work/{doc}' for doc in workspace)):
+              assert (dist / route / 'index.html').is_file(), f'missing dist/{route}/index.html'
 
           index = (dist / 'index.html').read_text()
-          assert '作者审阅预览' in index, 'missing author preview label in dist/index.html'
+          assert '作者私密书架' in index, 'missing author label in dist/index.html'
+          for doc in workspace:
+              assert f'href="/work/{doc}"' in index, f'missing workspace link for {doc}'
+          for previous, following in zip(chapters, chapters[1:]):
+              html = (dist / previous / 'index.html').read_text()
+              assert f'href="/{following}" rel="next"' in html, f'missing {previous} → {following} link'
           for chapter in ('02', '03', '08'):
               html = (dist / chapter / 'index.html').read_text()
               assert '草稿 · 审阅版' in html, f'missing draft label in dist/{chapter}/index.html'
+              for doc in (f'brief-{chapter}', f'phase1-{chapter}', f'phase2-{chapter}-review'):
+                  assert f'href="/work/{doc}"' in html, f'missing related link for {doc}'
+          for chapter in ('04', '05', '06', '07', '09', '10', '11'):
+              html = (dist / chapter / 'index.html').read_text()
+              assert '写作任务书 · 正文未成稿' in html, f'missing brief label in dist/{chapter}/index.html'
           chapter_01 = (dist / '01/index.html').read_text()
           assert '草稿 · 审阅版' not in chapter_01, 'draft label leaked into chapter 01'
+          story_bible = (dist / 'work/story-bible/index.html').read_text()
+          for text in ('class="doc-toc"', 'id="sec-1"', 'class="table-wrap"', 'href="/work/tech-boundaries"'):
+              assert text in story_bible, f'missing {text!r} in story bible'
           PY

@@ -3,19 +3,29 @@ import ReaderControls from '../components/ReaderControls.astro';
 import { acts } from '../data/catalog';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getChapters } from '../lib/chapters';
+import { isAuthorSiteMode, shouldIncludeDrafts, shouldIncludeWorkspace } from '../lib/siteMode';
+import { getWorkspace } from '../lib/workspace';
 
-const { chapters, showDrafts } = await getChapters();
+const [{ chapters }, workspace] = await Promise.all([getChapters(), getWorkspace()]);
+const showAuthorSite = isAuthorSiteMode();
+const showDrafts = shouldIncludeDrafts();
+const showWorkspace = shouldIncludeWorkspace();
 const readable = new Map(chapters.map((chapter) => [chapter.number, chapter]));
 const epigraph = '十种超级智能未来，十段彼此平行的人类命运。';
 ---
 <BaseLayout title="十个明天 · Ten Tomorrows" description={epigraph}>
   <div class="page">
-    <div class="reader-bar cover-bar">
+    <div class:list={['reader-bar', { 'cover-bar': !showWorkspace }]}>
+      {showWorkspace && <a href="#workspace">工作区 ↓</a>}
       <ReaderControls />
     </div>
 
     <main>
-      {showDrafts && <p class="draft-notice">作者审阅预览 · 含未审草稿（正式站仅显示已审章节）</p>}
+      {showAuthorSite ? (
+        <p class="draft-notice">作者私密书架 · 含草稿、任务书与工作稿（仅限 Vercel 登录可见）</p>
+      ) : showDrafts && (
+        <p class="draft-notice">作者审阅预览 · 含未审草稿（正式站仅显示已审章节）</p>
+      )}
       <header class="cover">
         <h1>十个明天</h1>
         <p class="cover-subtitle" lang="en">Ten Tomorrows</p>
@@ -37,9 +47,13 @@ const epigraph = '十种超级智能未来，十段彼此平行的人类命运�
                       <a class="toc-row" href={`/${chapter.slug}`}>
                         <span class="toc-number">{entry.number}</span>
                         <span>{entry.title}</span>
-                        {chapter.draftPr
-                          ? <span class="toc-status draft-status">草稿 · 待审</span>
-                          : <span class="toc-status">约 {chapter.readingMinutes} 分钟</span>}
+                        {chapter.status === 'draft' ? (
+                          <span class="toc-status draft-status">草稿 · 待审</span>
+                        ) : chapter.status === 'brief' ? (
+                          <span class="toc-status brief-status">任务书 · 未成稿</span>
+                        ) : (
+                          <span class="toc-status">{showWorkspace && '已审 · '}约 {chapter.readingMinutes} 分钟</span>
+                        )}
                       </a>
                     ) : (
                       <div class="toc-row upcoming">
@@ -55,6 +69,27 @@ const epigraph = '十种超级智能未来，十段彼此平行的人类命运�
           </section>
         ))}
       </nav>
+
+      {showWorkspace && (
+        <nav id="workspace" class="contents workspace" aria-labelledby="workspace-title">
+          <h2 id="workspace-title">工作区</h2>
+          {workspace.map(({ title, docs }) => (
+            <section class="act">
+              <h3>{title}</h3>
+              <ul role="list">
+                {docs.map((doc) => (
+                  <li>
+                    <a class="toc-row" href={`/work/${doc.slug}`}>
+                      <span>{doc.title}</span>
+                      <span class="toc-status">约 {doc.readingMinutes} 分钟</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </nav>
+      )}
     </main>
 
     <footer class="site-footer">

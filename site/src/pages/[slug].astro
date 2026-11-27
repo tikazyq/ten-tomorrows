@@ -1,8 +1,11 @@
 ---
 import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import DocumentBody from '../components/DocumentBody.astro';
 import ReaderControls from '../components/ReaderControls.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getChapters } from '../lib/chapters';
+import { shouldIncludeWorkspace } from '../lib/siteMode';
+import { relatedDocuments } from '../lib/workspace';
 
 export const getStaticPaths = (async () => {
   const { chapters } = await getChapters();
@@ -15,6 +18,7 @@ export const getStaticPaths = (async () => {
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const { chapter, previous, next } = Astro.props;
+const related = chapter.status === 'draft' && shouldIncludeWorkspace() ? relatedDocuments(chapter.number) : [];
 ---
 <BaseLayout title={`${chapter.title} · 十个明天`} description={`《十个明天》第 ${Number(chapter.number)} 章《${chapter.title}》。`} type="article">
   <div class="page">
@@ -24,19 +28,29 @@ const { chapter, previous, next } = Astro.props;
     </nav>
 
     <main>
-      {chapter.draftPr && (
+      {chapter.status === 'draft' && (
         <p class="draft-notice">草稿 · 审阅版 · PR #{chapter.draftPr}（尚未合入正式目录）</p>
       )}
       <header class="chapter-heading">
         <p class="chapter-number">第 {Number(chapter.number)} 章</p>
         <h1>{chapter.title}</h1>
+        {chapter.status === 'brief' && <p class="brief-status chapter-brief-status">写作任务书 · 正文未成稿</p>}
         <p class="chapter-details">
-          {chapter.subtitle && <><span>{chapter.subtitle}</span><span aria-hidden="true"> · </span></>}
+          {chapter.status !== 'brief' && chapter.subtitle && <><span>{chapter.subtitle}</span><span aria-hidden="true"> · </span></>}
           <span>约 {chapter.readingMinutes} 分钟阅读</span>
         </p>
       </header>
 
-      <article class="chapter-body" set:html={chapter.html} />
+      {related.length > 0 && (
+        <nav class="related-docs" aria-label="相关工作稿">
+          <span>相关工作稿</span>
+          {related.map(({ href, label }) => <a href={href}>{label}</a>)}
+        </nav>
+      )}
+
+      {chapter.status === 'brief'
+        ? <DocumentBody html={chapter.html} headings={chapter.headings} />
+        : <article class="chapter-body" set:html={chapter.html} />}
 
       <nav class="chapter-nav" aria-label="章节导航">
         <span>{previous && <a href={`/${previous.slug}`} rel="prev">← {previous.title}</a>}</span>
