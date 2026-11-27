@@ -7,6 +7,9 @@ import { isAuthorSiteMode, shouldIncludeDrafts, shouldIncludeWorkspace } from '.
 import { getWorkspace } from '../lib/workspace';
 
 const [{ chapters }, workspace] = await Promise.all([getChapters(), getWorkspace()]);
+const coreDocs = workspace.find(({ section }) => section === 'core')?.docs ?? [];
+const archives = workspace.filter(({ section }) => section === 'archive');
+const archiveCount = archives.reduce((count, { docs }) => count + docs.length, 0);
 const showAuthorSite = isAuthorSiteMode();
 const showDrafts = shouldIncludeDrafts();
 const showWorkspace = shouldIncludeWorkspace();
@@ -16,7 +19,7 @@ const epigraph = '十种超级智能未来，十段彼此平行的人类命运�
 <BaseLayout title="十个明天 · Ten Tomorrows" description={epigraph}>
   <div class="page">
     <div class:list={['reader-bar', { 'cover-bar': !showWorkspace }]}>
-      {showWorkspace && <a href="#workspace">工作区 ↓</a>}
+      {showWorkspace && <a href="#workspace">工作底稿 ↓</a>}
       <ReaderControls />
     </div>
 
@@ -50,7 +53,7 @@ const epigraph = '十种超级智能未来，十段彼此平行的人类命运�
                         {chapter.status === 'draft' ? (
                           <span class="toc-status draft-status">草稿 · 待审</span>
                         ) : chapter.status === 'brief' ? (
-                          <span class="toc-status brief-status">任务书 · 未成稿</span>
+                          <span class="toc-status brief-status">任务书</span>
                         ) : (
                           <span class="toc-status">{showWorkspace && '已审 · '}约 {chapter.readingMinutes} 分钟</span>
                         )}
@@ -72,22 +75,37 @@ const epigraph = '十种超级智能未来，十段彼此平行的人类命运�
 
       {showWorkspace && (
         <nav id="workspace" class="contents workspace" aria-labelledby="workspace-title">
-          <h2 id="workspace-title">工作区</h2>
-          {workspace.map(({ title, docs }) => (
-            <section class="act">
-              <h3>{title}</h3>
-              <ul role="list">
-                {docs.map((doc) => (
-                  <li>
-                    <a class="toc-row" href={`/work/${doc.slug}`}>
-                      <span>{doc.title}</span>
-                      <span class="toc-status">约 {doc.readingMinutes} 分钟</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          <h2 id="workspace-title">工作底稿</h2>
+          <div class="act">
+            <ul role="list">
+              {coreDocs.map((doc) => (
+                <li>
+                  <a class="toc-row" href={`/work/${doc.slug}`}>
+                    <span>{doc.title}</span>
+                    <span class="toc-status">约 {doc.readingMinutes} 分钟</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <details class="archive-drawer">
+            <summary>历史与流程归档（{archiveCount} 份）</summary>
+            {archives.map(({ title, docs }) => (
+              <section class="act">
+                <h3>{title}</h3>
+                <ul role="list">
+                  {docs.map((doc) => (
+                    <li>
+                      <a class="toc-row" href={`/work/${doc.slug}`}>
+                        <span>{doc.title}</span>
+                        <span class="toc-status">约 {doc.readingMinutes} 分钟</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </details>
         </nav>
       )}
     </main>

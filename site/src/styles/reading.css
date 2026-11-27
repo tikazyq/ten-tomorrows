@@ -223,6 +223,26 @@ a.toc-row:hover { background: var(--selected); }
 .workspace { margin-top: 56px; scroll-margin-top: 20px; }
 .workspace .toc-row { grid-template-columns: minmax(0, 1fr) auto; }
 
+.archive-drawer {
+  margin-top: 20px;
+  padding: 0 12px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--report);
+  color: var(--report-ink);
+}
+
+.archive-drawer summary {
+  padding: 12px 0;
+  cursor: pointer;
+  font: 600 .95rem/1.55 var(--sans);
+}
+
+.archive-drawer summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.archive-drawer .act:last-child { margin-bottom: 12px; }
+
+.doc-nav-links { display: flex; flex-wrap: wrap; gap: 0 12px; }
+
 .related-docs {
   display: flex;
   flex-wrap: wrap;

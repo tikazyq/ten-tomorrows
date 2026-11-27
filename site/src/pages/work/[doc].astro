@@ -16,10 +16,13 @@ export const getStaticPaths = (async () => {
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const { doc, group } = Astro.props;
 ---
-<BaseLayout title={`${doc.title} · 十个明天`} description={`《十个明天》工作区 · ${group}`} type="article">
+<BaseLayout title={`${doc.title} · 十个明天`} description={`《十个明天》工作底稿 · ${group}`} type="article">
   <div class="page">
     <nav class="reader-bar" aria-label="阅读工具">
-      <a href="/#workspace">← 工作区</a>
+      <div class="doc-nav-links">
+        {doc.chapter && <a href={`/${doc.chapter}`}>← 第 {doc.chapter} 章</a>}
+        <a href={doc.chapter ? '/' : '/#workspace'}>{doc.chapter ? '目录' : '← 工作底稿'}</a>
+      </div>
       <ReaderControls showSize />
     </nav>
 

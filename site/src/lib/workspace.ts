@@ -9,29 +9,36 @@ type WorkspaceDoc = {
   title: string;
   path: string;
   branch?: string;
+  chapter?: string;
+  optional?: boolean;
 };
 
 const draftChapters = [
   { number: '02', title: '完美的一天', brief: '02-完美的一天.md', outline: '02_完美的一天_结构方案.md' },
-  { number: '03', title: '接你放学', brief: '03-已办结.md', outline: '03_已办结_结构方案.md', formerTitle: '已办结' },
+  { number: '03', title: '接你放学', brief: '03-接你放学.md', outline: '03_已办结_结构方案.md' },
   { number: '08', title: '最后一个生日', brief: '08-最后一个生日.md', outline: '08_最后一个生日_结构方案.md' },
 ] as const;
 
-const groups: { title: string; docs: WorkspaceDoc[] }[] = [
+const groups: { section: 'core' | 'archive' | 'chapter'; title: string; docs: WorkspaceDoc[] }[] = [
   {
-    title: '世界观与设定',
+    section: 'core',
+    title: '工作底稿',
     docs: [
-      { slug: 'story-bible', title: '故事圣经 v0.8', path: 'canon/story-bible.md' },
+      { slug: 'story-bible', title: '故事圣经', path: 'canon/story-bible.md' },
+      { slug: 'toc-status', title: '全书目录与进度', path: 'editorial/目录与标题状态.md' },
       { slug: 'tech-boundaries', title: '技术设定与证据边界', path: 'research/技术设定边界.md' },
+      { slug: 'guide', title: '创作与审稿规范', path: 'editorial/创作与审稿规范.md' },
     ],
   },
   {
-    title: '第一阶段 · 结构方案与审稿',
+    section: 'archive',
+    title: '第一阶段归档（Gate A 已合并）',
     docs: [
-      ...draftChapters.map(({ number, title, outline, ...chapter }) => ({
+      ...draftChapters.map(({ number, title, outline }) => ({
         slug: `phase1-${number}`,
-        title: `${number}《${title}》结构方案${'formerTitle' in chapter ? `（旧题：${chapter.formerTitle}）` : ''}`,
+        title: `${number}《${title}》结构方案`,
         path: `outputs/phase1/${outline}`,
+        chapter: number,
       })),
       { slug: 'phase1-cross-review', title: '三篇故事交叉审稿', path: 'outputs/phase1/三篇故事_交叉审稿.md' },
       { slug: 'phase1-titles', title: '标题与因果评估', path: 'outputs/phase1/标题与因果评估.md' },
@@ -39,31 +46,36 @@ const groups: { title: string; docs: WorkspaceDoc[] }[] = [
     ],
   },
   {
+    section: 'archive',
+    title: '历史笔记与旧版流程',
+    docs: [
+      { slug: 'chapter-01-retrospective', title: '《永乐城》创作复盘', path: 'editorial/archive/01-永乐城创作复盘.md', optional: true },
+      { slug: 'v08-continuity', title: 'v0.8 连续性检查', path: 'editorial/archive/v0.8-连续性检查.md' },
+      { slug: 'writing-guide', title: '写作 Agent 统一指令', path: 'editorial/archive/写作Agent_统一指令.md' },
+      { slug: 'plan', title: '创作执行计划', path: 'editorial/archive/创作执行计划.md' },
+      { slug: 'review-process', title: '审稿与交接流程', path: 'editorial/archive/审稿与交接流程.md' },
+    ],
+  },
+  {
+    section: 'chapter',
     title: '第二阶段 · 审读与连续性',
     docs: draftChapters.map(({ number, title }) => ({
       slug: `phase2-${number}-review`,
       title: `${number}《${title}》审读与连续性`,
       path: `${posix.dirname(draftSources[number].path)}/审读与连续性.md`,
       branch: draftSources[number].branch,
+      chapter: number,
     })),
   },
   {
+    section: 'chapter',
     title: '章节任务书',
-    docs: draftChapters.map(({ number, title, brief, ...chapter }) => ({
+    docs: draftChapters.map(({ number, title, brief }) => ({
       slug: `brief-${number}`,
-      title: `${number}《${title}》任务书${'formerTitle' in chapter ? `（旧题：${chapter.formerTitle}）` : ''}`,
+      title: `${number}《${title}》写作任务书`,
       path: `briefs/${brief}`,
+      chapter: number,
     })),
-  },
-  {
-    title: '目录与编辑规范',
-    docs: [
-      { slug: 'toc-status', title: '全书目录与标题状态', path: 'editorial/目录与标题状态.md' },
-      { slug: 'v08-continuity', title: 'v0.8 连续性检查', path: 'editorial/v0.8-连续性检查.md' },
-      { slug: 'plan', title: '创作执行计划', path: 'editorial/创作执行计划.md' },
-      { slug: 'writing-guide', title: '写作 Agent 统一指令', path: 'editorial/写作Agent_统一指令.md' },
-      { slug: 'review-process', title: '审稿与交接流程', path: 'editorial/审稿与交接流程.md' },
-    ],
   },
 ];
 
@@ -86,22 +98,28 @@ export const documentRoutes = new Map<string, string>([
 
 export function relatedDocuments(number: string) {
   return [
-    { href: `/work/brief-${number}`, label: '任务书' },
-    { href: `/work/phase1-${number}`, label: '结构方案' },
     { href: `/work/phase2-${number}-review`, label: '审读与连续性' },
+    { href: `/work/brief-${number}`, label: '写作任务书' },
+    { href: `/work/phase1-${number}`, label: '第一阶段结构方案' },
   ];
 }
 
 async function loadWorkspace() {
   if (!shouldIncludeWorkspace()) return [];
 
-  return Promise.all(groups.map(async ({ title, docs }) => ({
-    title,
-    docs: await Promise.all(docs.map(async ({ slug, title, path, branch }) => {
-      const markdown = branch ? await readBranchFile({ path, branch }) : await readRepoFile(path);
-      return { slug, title, ...renderDocument(markdown, path, documentRoutes) };
-    })),
-  })));
+  return Promise.all(groups.map(async ({ section, title, docs }) => {
+    const rendered = await Promise.all(docs.map(async ({ slug, title, path, branch, chapter, optional }) => {
+      const markdown = await (branch ? readBranchFile({ path, branch }) : readRepoFile(path))
+        .catch((error: NodeJS.ErrnoException) => {
+          if (optional && error.code === 'ENOENT') return undefined;
+          throw error;
+        });
+      if (markdown === undefined) return undefined;
+      return { slug, title, chapter, ...renderDocument(markdown, path, documentRoutes) };
+    }));
+
+    return { section, title, docs: rendered.filter((doc) => doc !== undefined) };
+  }));
 }
 
 let workspaceBuild: ReturnType<typeof loadWorkspace> | undefined;
