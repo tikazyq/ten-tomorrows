@@ -42,8 +42,8 @@ const related = chapter.status === 'draft' && shouldIncludeWorkspace() ? related
       </header>
 
       {related.length > 0 && (
-        <nav class="related-docs" aria-label="相关工作稿">
-          <span>相关工作稿</span>
+        <nav class="related-docs" aria-label="本章底稿">
+          <span>本章底稿</span>
           {related.map(({ href, label }) => <a href={href}>{label}</a>)}
         </nav>
       )}

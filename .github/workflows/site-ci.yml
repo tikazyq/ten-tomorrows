@@ -69,7 +69,7 @@ jobs:
 
           index = (dist / 'index.html').read_text()
           chapter = (dist / '01/index.html').read_text()
-          for text in ('人类动物园', '人类灭绝', '恶意 AI', '作者私密书架', '任务书 · 未成稿', 'id="workspace"'):
+          for text in ('人类动物园', '人类灭绝', '恶意 AI', '作者私密书架', 'id="workspace"', 'class="archive-drawer"'):
               assert text not in index, f'{text!r} leaked into dist/index.html'
           assert '待 PR 审核' not in chapter, 'review marker leaked into chapter 01'
           for text in ('meta-table', 'analysis-report', 'knowledge-report', 'system-title', 'archive-label', 'noindex'):
@@ -84,32 +84,51 @@ jobs:
         run: |
           npm run build
           python3 - <<'PY'
+          import re
           from pathlib import Path
 
           dist = Path('dist')
           chapters = [f'{number:02}' for number in range(1, 12)]
-          workspace = (
-              'story-bible', 'tech-boundaries', 'phase1-02', 'phase1-03', 'phase1-08',
+          core = ('story-bible', 'toc-status', 'tech-boundaries', 'guide')
+          archive = [
+              'phase1-02', 'phase1-03', 'phase1-08',
               'phase1-cross-review', 'phase1-titles', 'phase1-decisions',
-              'phase2-02-review', 'phase2-03-review', 'phase2-08-review',
-              'brief-02', 'brief-03', 'brief-08',
-              'toc-status', 'v08-continuity', 'plan', 'writing-guide', 'review-process',
-          )
+              'v08-continuity', 'writing-guide', 'plan', 'review-process',
+          ]
+          retrospective = 'chapter-01-retrospective'
+          if Path('../editorial/archive/01-永乐城创作复盘.md').is_file():
+              archive.insert(6, retrospective)
+          else:
+              assert not (dist / 'work' / retrospective).exists(), 'missing-source retrospective was emitted'
+          draft_chapters = ('02', '03', '08')
+          chapter_docs = [doc for chapter in draft_chapters for doc in (f'brief-{chapter}', f'phase2-{chapter}-review')]
+          workspace = (*core, *archive, *chapter_docs)
           for route in (*chapters, *(f'work/{doc}' for doc in workspace)):
               assert (dist / route / 'index.html').is_file(), f'missing dist/{route}/index.html'
 
           index = (dist / 'index.html').read_text()
           assert '作者私密书架' in index, 'missing author label in dist/index.html'
-          for doc in workspace:
-              assert f'href="/work/{doc}"' in index, f'missing workspace link for {doc}'
+          assert '任务书 · 未成稿' not in index and '>任务书</span>' in index, 'incorrect brief label in author index'
+          before_archive, drawer, after_archive = index.partition('<details class="archive-drawer">')
+          assert drawer, 'missing closed archive drawer in author index'
+          archive_html, close, _ = after_archive.partition('</details>')
+          assert close and f'历史与流程归档（{len(archive)} 份）' in archive_html, 'incorrect archive count'
+          assert re.findall(r'href="/work/([^"]+)"', before_archive) == list(core), 'incorrect core workspace links'
+          assert re.findall(r'href="/work/([^"]+)"', archive_html) == archive, 'incorrect archive links'
+          for doc in chapter_docs:
+              assert f'href="/work/{doc}"' not in index, f'chapter document {doc} leaked into author index'
           for previous, following in zip(chapters, chapters[1:]):
               html = (dist / previous / 'index.html').read_text()
               assert f'href="/{following}" rel="next"' in html, f'missing {previous} → {following} link'
-          for chapter in ('02', '03', '08'):
+          for chapter in draft_chapters:
               html = (dist / chapter / 'index.html').read_text()
               assert '草稿 · 审阅版' in html, f'missing draft label in dist/{chapter}/index.html'
+              assert '本章底稿' in html, f'missing document navigation for chapter {chapter}'
               for doc in (f'brief-{chapter}', f'phase1-{chapter}', f'phase2-{chapter}-review'):
                   assert f'href="/work/{doc}"' in html, f'missing related link for {doc}'
+                  doc_html = (dist / 'work' / doc / 'index.html').read_text()
+                  assert f'href="/{chapter}">← 第 {chapter} 章</a>' in doc_html, f'missing chapter backlink for {doc}'
+                  assert 'href="/">目录</a>' in doc_html, f'missing contents backlink for {doc}'
           for chapter in ('04', '05', '06', '07', '09', '10', '11'):
               html = (dist / chapter / 'index.html').read_text()
               assert '写作任务书 · 正文未成稿' in html, f'missing brief label in dist/{chapter}/index.html'
