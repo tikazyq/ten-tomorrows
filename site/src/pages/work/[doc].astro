@@ -1,0 +1,36 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import DocumentBody from '../../components/DocumentBody.astro';
+import ReaderControls from '../../components/ReaderControls.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getWorkspace } from '../../lib/workspace';
+
+export const getStaticPaths = (async () => {
+  const groups = await getWorkspace();
+  return groups.flatMap(({ title, docs }) => docs.map((doc) => ({
+    params: { doc: doc.slug },
+    props: { doc, group: title },
+  })));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { doc, group } = Astro.props;
+---
+<BaseLayout title={`${doc.title} · 十个明天`} description={`《十个明天》工作区 · ${group}`} type="article">
+  <div class="page">
+    <nav class="reader-bar" aria-label="阅读工具">
+      <a href="/#workspace">← 工作区</a>
+      <ReaderControls showSize />
+    </nav>
+
+    <main>
+      <header class="chapter-heading doc-heading">
+        <p class="chapter-number">{group}</p>
+        <h1>{doc.title}</h1>
+        <p class="chapter-details">约 {doc.readingMinutes} 分钟阅读</p>
+      </header>
+
+      <DocumentBody html={doc.html} headings={doc.headings} />
+    </main>
+  </div>
+</BaseLayout>

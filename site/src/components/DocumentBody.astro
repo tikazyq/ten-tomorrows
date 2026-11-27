@@ -1,0 +1,17 @@
+---
+interface Props {
+  html: string;
+  headings: { id: string; title: string }[];
+}
+
+const { html, headings } = Astro.props;
+---
+{headings.length >= 3 && (
+  <details class="doc-toc">
+    <summary>页内目录</summary>
+    <ol>
+      {headings.map(({ id, title }) => <li><a href={`#${id}`}>{title}</a></li>)}
+    </ol>
+  </details>
+)}
+<article class="doc-body" set:html={html} />
