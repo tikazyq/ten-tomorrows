@@ -19,6 +19,15 @@ const draftChapters = [
   { number: '08', title: '最后一个生日', brief: '08-最后一个生日.md', outline: '08_最后一个生日_结构方案.md' },
 ] as const;
 
+const phase3Chapters = [
+  { number: '04', title: '04《无异议》双案结构方案', outline: '04_未写的答案_双案结构方案.md' },
+  { number: '05', title: '05《人类的工作》结构方案', outline: '05_人类的工作_结构方案.md' },
+  { number: '06', title: '06《未完成的神》结构方案', outline: '06_未完成的神_结构方案.md' },
+  { number: '07', title: '07《万亿分之一》结构方案', outline: '07_万亿分之一_结构方案.md' },
+  { number: '09', title: '09《死亡申请》结构方案', outline: '09_死亡申请_结构方案.md' },
+  { number: '10', title: '10《第一万年》结构方案', outline: '10_第一万年_结构方案.md' },
+] as const;
+
 const groups: { section: 'core' | 'archive' | 'chapter'; title: string; docs: WorkspaceDoc[] }[] = [
   {
     section: 'core',
@@ -43,6 +52,22 @@ const groups: { section: 'core' | 'archive' | 'chapter'; title: string; docs: Wo
       { slug: 'phase1-cross-review', title: '三篇故事交叉审稿', path: 'outputs/phase1/三篇故事_交叉审稿.md' },
       { slug: 'phase1-titles', title: '标题与因果评估', path: 'outputs/phase1/标题与因果评估.md' },
       { slug: 'phase1-decisions', title: '第一阶段待用户决策', path: 'outputs/phase1/第一阶段_待用户决策.md' },
+    ],
+  },
+  {
+    section: 'archive',
+    title: '第三阶段归档（Gate A 已合并）',
+    docs: [
+      ...phase3Chapters.map(({ number, title, outline }) => ({
+        slug: `phase3-${number}`,
+        title,
+        path: `outputs/phase3/${outline}`,
+        chapter: number,
+      })),
+      { slug: 'phase3-batch1-cross-review', title: '第三阶段第一批交叉审稿', path: 'outputs/phase3/三篇故事_交叉审稿.md' },
+      { slug: 'phase3-batch1-decisions', title: '第三阶段第一批待用户决策', path: 'outputs/phase3/第三阶段第一批_待用户决策.md' },
+      { slug: 'phase3-batch2-cross-review', title: '第三阶段第二批交叉审稿', path: 'outputs/phase3/三篇故事_第二批交叉审稿.md' },
+      { slug: 'phase3-batch2-decisions', title: '第三阶段第二批待用户决策', path: 'outputs/phase3/第三阶段第二批_待用户决策.md' },
     ],
   },
   {
@@ -80,7 +105,7 @@ const groups: { section: 'core' | 'archive' | 'chapter'; title: string; docs: Wo
 ];
 
 export const briefPaths = new Map([
-  ['04', 'briefs/04-未写的答案.md'],
+  ['04', 'briefs/04-无异议.md'],
   ['05', 'briefs/05-人类的工作.md'],
   ['06', 'briefs/06-未完成的神.md'],
   ['07', 'briefs/07-万亿分之一.md'],
@@ -97,11 +122,17 @@ export const documentRoutes = new Map<string, string>([
 ]);
 
 export function relatedDocuments(number: string) {
-  return [
-    { href: `/work/phase2-${number}-review`, label: '审读与连续性' },
-    { href: `/work/brief-${number}`, label: '写作任务书' },
-    { href: `/work/phase1-${number}`, label: '第一阶段结构方案' },
-  ];
+  if (draftChapters.some((chapter) => chapter.number === number)) {
+    return [
+      { href: `/work/phase2-${number}-review`, label: '审读与连续性' },
+      { href: `/work/brief-${number}`, label: '写作任务书' },
+      { href: `/work/phase1-${number}`, label: '第一阶段结构方案' },
+    ];
+  }
+  if (phase3Chapters.some((chapter) => chapter.number === number)) {
+    return [{ href: `/work/phase3-${number}`, label: '第三阶段结构方案' }];
+  }
+  return [];
 }
 
 async function loadWorkspace() {
