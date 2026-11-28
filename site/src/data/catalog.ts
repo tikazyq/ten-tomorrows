@@ -10,7 +10,7 @@ export const acts = [
   {
     label: '第二幕 · 权力与文明',
     chapters: [
-      { number: '04', slug: '04', title: '未写的答案' },
+      { number: '04', slug: '04', title: '无异议' },
       { number: '05', slug: '05', title: '人类的工作' },
       { number: '06', slug: '06', title: '未完成的神' },
       { number: '07', slug: '07', title: '万亿分之一' },

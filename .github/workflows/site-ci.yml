@@ -10,6 +10,7 @@ on:
       - 'editorial/**'
       - 'outputs/phase1/**'
       - 'outputs/phase2/**'
+      - 'outputs/phase3/**'
       - 'research/**'
       - '.github/workflows/site-ci.yml'
   push:
@@ -23,6 +24,7 @@ on:
       - 'editorial/**'
       - 'outputs/phase1/**'
       - 'outputs/phase2/**'
+      - 'outputs/phase3/**'
       - 'research/**'
       - '.github/workflows/site-ci.yml'
   workflow_dispatch:
@@ -89,17 +91,21 @@ jobs:
 
           dist = Path('dist')
           chapters = [f'{number:02}' for number in range(1, 12)]
+          phase3_chapters = ('04', '05', '06', '07', '09', '10')
           core = ('story-bible', 'toc-status', 'tech-boundaries', 'guide')
           archive = [
               'phase1-02', 'phase1-03', 'phase1-08',
               'phase1-cross-review', 'phase1-titles', 'phase1-decisions',
-              'v08-continuity', 'writing-guide', 'plan', 'review-process',
+              *(f'phase3-{chapter}' for chapter in phase3_chapters),
+              'phase3-batch1-cross-review', 'phase3-batch1-decisions',
+              'phase3-batch2-cross-review', 'phase3-batch2-decisions',
           ]
           retrospective = 'chapter-01-retrospective'
           if Path('../editorial/archive/01-永乐城创作复盘.md').is_file():
-              archive.insert(6, retrospective)
+              archive.append(retrospective)
           else:
               assert not (dist / 'work' / retrospective).exists(), 'missing-source retrospective was emitted'
+          archive.extend(('v08-continuity', 'writing-guide', 'plan', 'review-process'))
           draft_chapters = ('02', '03', '08')
           chapter_docs = [doc for chapter in draft_chapters for doc in (f'brief-{chapter}', f'phase2-{chapter}-review')]
           workspace = (*core, *archive, *chapter_docs)
@@ -129,9 +135,19 @@ jobs:
                   doc_html = (dist / 'work' / doc / 'index.html').read_text()
                   assert f'href="/{chapter}">← 第 {chapter} 章</a>' in doc_html, f'missing chapter backlink for {doc}'
                   assert 'href="/">目录</a>' in doc_html, f'missing contents backlink for {doc}'
-          for chapter in ('04', '05', '06', '07', '09', '10', '11'):
+          for chapter in phase3_chapters:
               html = (dist / chapter / 'index.html').read_text()
-              assert '写作任务书 · 正文未成稿' in html, f'missing brief label in dist/{chapter}/index.html'
+              assert 'Gate A 结构方案已通过 · 正文待启动' in html, f'missing Gate A label for chapter {chapter}'
+              doc = f'phase3-{chapter}'
+              related = html.partition('<nav class="related-docs"')[2].partition('</nav>')[0]
+              assert f'href="/work/{doc}">第三阶段结构方案</a>' in related, f'missing related link for {doc}'
+              doc_html = (dist / 'work' / doc / 'index.html').read_text()
+              assert f'href="/{chapter}">← 第 {chapter} 章</a>' in doc_html, f'missing chapter backlink for {doc}'
+              assert 'href="/">目录</a>' in doc_html, f'missing contents backlink for {doc}'
+          assert '<h1>无异议</h1>' in (dist / '04/index.html').read_text(), 'incorrect chapter 04 title'
+          chapter_11 = (dist / '11/index.html').read_text()
+          assert '写作任务书 · 正文未成稿' in chapter_11, 'missing brief label for chapter 11'
+          assert '本章底稿' not in chapter_11, 'unexpected document navigation for chapter 11'
           chapter_01 = (dist / '01/index.html').read_text()
           assert '草稿 · 审阅版' not in chapter_01, 'draft label leaked into chapter 01'
           story_bible = (dist / 'work/story-bible/index.html').read_text()

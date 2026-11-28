@@ -18,7 +18,7 @@ export const getStaticPaths = (async () => {
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const { chapter, previous, next } = Astro.props;
-const related = chapter.status === 'draft' && shouldIncludeWorkspace() ? relatedDocuments(chapter.number) : [];
+const related = chapter.status !== 'approved' && shouldIncludeWorkspace() ? relatedDocuments(chapter.number) : [];
 ---
 <BaseLayout title={`${chapter.title} · 十个明天`} description={`《十个明天》第 ${Number(chapter.number)} 章《${chapter.title}》。`} type="article">
   <div class="page">
@@ -34,7 +34,11 @@ const related = chapter.status === 'draft' && shouldIncludeWorkspace() ? related
       <header class="chapter-heading">
         <p class="chapter-number">第 {Number(chapter.number)} 章</p>
         <h1>{chapter.title}</h1>
-        {chapter.status === 'brief' && <p class="brief-status chapter-brief-status">写作任务书 · 正文未成稿</p>}
+        {chapter.status === 'brief' && (
+          <p class="brief-status chapter-brief-status">
+            {related.length > 0 ? 'Gate A 结构方案已通过 · 正文待启动' : '写作任务书 · 正文未成稿'}
+          </p>
+        )}
         <p class="chapter-details">
           {chapter.status !== 'brief' && chapter.subtitle && <><span>{chapter.subtitle}</span><span aria-hidden="true"> · </span></>}
           <span>约 {chapter.readingMinutes} 分钟阅读</span>
